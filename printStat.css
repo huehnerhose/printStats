@@ -16,7 +16,7 @@ body{
 	font-weight: bold;
 }
 
-a.printer{
+a.printer, a.year, a.month{
 	margin-right: 10px;
 }
 
