@@ -15,7 +15,7 @@
 			log[printer] = data.filter(function(e){	if(e.printer === printer) return e; });
 			$("#head #printer").append("<a href='#' class='printer' id='"+printer+"'>"+printer+"</a>");
 			$("a#"+printer).click(function(event) {
-				$("a.printer").removeClass('active');
+				$("a").removeClass('active');
 				$(this).addClass('active');
 				printerSummary($("a.printer.active").html(), $("a.year.active").html(), $("a.month.active").html());
 				return false;
@@ -25,19 +25,21 @@
 		years = getLoggedYears(log);
 
 		$.each(years, function(i, year){
-			$('#year').append("<a href='#' class='year' id='"+year+"'>"+year+"</a>");
-			$("#"+year).click(function(){
+			$('#year').append("<a href='#' class='year' id='y"+year+"'>"+year+"</a>");
+			$("#y"+year).click(function(){
 				$("a.year").removeClass("active");
 				$(this).addClass('active');
+				return false;
 			})
 		});
 
 		for(var month = 1; month <= 12; month++){
-			$('#month').append("<a href='#' class='month' id='"+month+"'>"+month+"</a>");
-			$("#"+month).click(function(){
+			$('#month').append("<a href='#' class='month' id='m"+month+"'>"+month+"</a>");
+			$("#m"+month).click(function(){
 				$("a.month").removeClass("active");
 				$(this).addClass('active');
 				printerSummary($("a.printer.active").html(), $("a.year.active").html(), $("a.month.active").html());
+				return false;
 			})
 		};
 
