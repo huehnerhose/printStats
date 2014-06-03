@@ -73,6 +73,11 @@ var Collection_RawData = Backbone.Collection.extend({
 		return _.reduce( foundElements, function(memo, model){ return memo + model.get("pages"); }, 0 );
 
 	},
+
+	sumPrints: function(){
+		return _.reduce( this.models, function(memo, model){ return memo + model.get("pages"); }, 0 );
+	}
+
 });
 
 
@@ -218,62 +223,7 @@ var View_Statistics = Backbone.View.extend({
 			return false;
 		}
 
-		// Apply filterModel
-		if( $.isEmptyObject( this.filterModel.attributes ) ){
-			this.filteredData = this.rawData;
-		}else{
-			this.filteredData =  new Collection_RawData( this.rawData.where( this.filterModel.attributes ) ); 	
-		}
-
-		// nur auf Monthbase
-		var uniqueYears = _.uniq( this.filteredData.pluck('year') );
-		var uniqueCC = _.uniq( this.filteredData.pluck('costcenter'));
-
-		var firstPlotline = [ "Month" ];
-
-		if(this.perCC.get("perCC")){
-			_.each(uniqueCC, function(cc){
-				var costcenter = statisticsApp.costcenterData.findWhere({costcenter: String(cc)});
-				if(!_.isUndefined(costcenter)){
-					firstPlotline.push( costcenter.get("cc_name") );
-				}else{
-					firstPlotline.push(cc);
-				}
-					
-			});	
-		}else{
-			firstPlotline.push("Insgesamt");
-		}
-
-		
-
-		var plotData = [
-			firstPlotline
-		];
-		
-
-		_.each(uniqueYears, function(year){
-			for( var month = 1; month <= 12; month++ ){
-
-				var monthlyPrintsPerCC = [ (String(month).length == 1 ? String(0)+String(month) : String(month) ) ];
-
-				if(this.perCC.get("perCC")){
-					_.each(uniqueCC, function(cc){
-
-						var prints = this.filteredData.getPrintCount(null, parseInt(cc, 10), year, month);
-						monthlyPrintsPerCC.push(prints);
-
-					}, this);	
-				}else{
-					monthlyPrintsPerCC.push( this.filteredData.getPrintCount(null, null, year, month) );
-				}
-
-
-
-				plotData.push(monthlyPrintsPerCC);
-
-			}
-		}, this);
+		var plotData = this._preparePlotData();
 
 		this.$el.html("");
 
@@ -299,11 +249,84 @@ var View_Statistics = Backbone.View.extend({
 		chart.draw(data, options);
 		table.draw(data);
 
-		// var statisticsText = new View_Statistics_Text();
-		// statisticsText.data = this.filteredModels;
+	},
 
-		// this.$el.append( statisticsText.render().$el );
+	_preparePlotData: function(){
 
+		// Apply filterModel
+		if( $.isEmptyObject( this.filterModel.attributes ) ){
+			this.filteredData = this.rawData;
+		}else{
+			this.filteredData =  new Collection_RawData( this.rawData.where( this.filterModel.attributes ) ); 	
+		}
+
+		var plotData = [
+			this._createHeader()
+		];
+
+		_.each( this.filteredData.groupBy("year"), function(yearData, year){
+			var yearCollection = new Collection_RawData(yearData);
+
+			_.each( yearCollection.groupBy("month"), function(monthData, month){
+
+				var monthData = new Collection_RawData(monthData)
+
+				// Mighty awesomeness
+				if(_.isUndefined( Intl )){
+					alert("Update your Browser");
+				}else{
+					var i = Intl.DateTimeFormat("en", {month: "short"});
+					month = i.format( (new Date()).setMonth( month ) );	
+				}
+				
+
+				var renderDataLine = [
+					month + " " + year
+				];
+
+				if(this.perCC.get("perCC")){
+					// Render View per Costcenter
+					_.each(statisticsApp.costcenter, function(cc){
+						
+						var costcenterData = new Collection_RawData( monthData.where({costcenter: cc}) );
+						renderDataLine.push( costcenterData.sumPrints() );
+
+					}, this);
+				}else{
+					// render only with total prints
+					renderDataLine.push( monthData.sumPrints() );
+				}
+				
+				plotData.push(renderDataLine);
+				
+			}, this );
+
+			
+
+		}, this );
+
+		return plotData;
+
+	},
+
+	_createHeader: function(){
+		var firstPlotline = [ "Month" ];
+
+		if(this.perCC.get("perCC")){
+			_.each(statisticsApp.costcenter, function(cc){
+				var costcenter = statisticsApp.costcenterData.findWhere({costcenter: String(cc)});
+				if(!_.isUndefined(costcenter)){
+					firstPlotline.push( costcenter.get("cc_name") );
+				}else{
+					firstPlotline.push(cc);
+				}
+					
+			});	
+		}else{
+			firstPlotline.push("Insgesamt");
+		}
+
+		return firstPlotline;
 	}
 });
 
