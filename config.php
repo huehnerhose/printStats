@@ -1,4 +1,4 @@
 <?php
  $dsn = 'mysql:host=localhost;dbname=printStats;charset=utf8';
  $user = 'printStats';
- $password = 'ttyX56CuDtsvZLSV';
+ $password = 'tdNsq6a6ef5UnGaZ';

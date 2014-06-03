@@ -9,6 +9,8 @@ Class DB{
 		$this->checkStmt = $this->db->prepare("SELECT pages FROM data WHERE jobid=:jobid AND printer=:printer");
 		$this->insertStmt = $this->db->prepare("INSERT INTO data(jobid, printer, date, user, pages) VALUES(:jobid, :printer, :date, :user, :pages)");
 		$this->getStmt = $this->db->prepare("SELECT * FROM data WHERE date >= :startDate AND date <= :endDate");
+		$this->user2cc = $this->db->prepare("SELECT * FROM user2cc");
+		$this->costcenter = $this->db->prepare("SELECT * FROM costcenter");
 	}
 
 	function pdo_sql_debug($string,$data) {
@@ -64,6 +66,18 @@ Class DB{
 		}else{
 			print_r($rows);
 		}
+	}
+
+	function getCostcenter(){
+		$this->costcenter->execute();
+		$rows = $this->costcenter->fetchAll();
+		return $rows;
+	}
+
+	function getUser2CC(){
+		$this->user2cc->execute();
+		$rows = $this->user2cc->fetchAll();
+		return $rows;
 	}
 }
 
