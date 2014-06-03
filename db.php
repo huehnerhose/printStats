@@ -40,7 +40,7 @@ Class DB{
 
 		$this->getStmt->execute($data);
 
-		$rows = $this->getStmt->fetchAll();
+		$rows = $this->getStmt->fetchAll(PDO::FETCH_ASSOC);
 		return $rows;
 
 	}
@@ -70,13 +70,13 @@ Class DB{
 
 	function getCostcenter(){
 		$this->costcenter->execute();
-		$rows = $this->costcenter->fetchAll();
+		$rows = $this->costcenter->fetchAll(PDO::FETCH_ASSOC);
 		return $rows;
 	}
 
 	function getUser2CC(){
 		$this->user2cc->execute();
-		$rows = $this->user2cc->fetchAll();
+		$rows = $this->user2cc->fetchAll(PDO::FETCH_ASSOC);
 		return $rows;
 	}
 }
