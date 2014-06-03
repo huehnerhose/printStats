@@ -144,11 +144,21 @@ var View_Menu = Backbone.View.extend({
 
 	},
 
-	initialize: function(){
-		_.bindAll(this, "render");
+	initialize: function(param){
+		if(_.isUndefined(param)){
+			console.log("Fuck");
+		}else{
+			this.rawData = param.rawData;
+			this.rawData.on("sync", this.render, this);	
+		}
+		
 	},
 
 	render: function(){
+
+		this.costcenter = _.uniq( this.rawData.pluck('costcenter') );
+		this.printer = _.uniq( this.rawData.pluck('printer') );
+		this.years = _.uniq( this.rawData.pluck('year') );
 
 		// var _this = this;
 
@@ -173,25 +183,25 @@ var View_Menu = Backbone.View.extend({
 	handleSelect: function(event){
 		var attribute = $(event.target).attr("name");
 		var value = $(event.target).val();
-
-		if(value == "Alle"){
-			statisticsApp.statistics.filterModel.unset(attribute);
-		}else{
-			if(attribute != "printer"){
-				value = parseInt(value, 10);
+		if(this.mode == "statistics"){
+			if(value == "Alle"){
+				statisticsApp.statistics.filterModel.unset(attribute);
+			}else{
+				if(attribute != "printer"){
+					value = parseInt(value, 10);
+				}
+				statisticsApp.statistics.filterModel.set(attribute, value);
 			}
-			statisticsApp.statistics.filterModel.set(attribute, value);
 		}
-
 		// render Statistics with additional attribute / value combination
 		
 
 	},
 
 	handleClick: function(event){
-		console.log("click");
-		event.stopPropagation();
-		return false;
+		// console.log("click");
+		// event.stopPropagation();
+		// return false;
 	},
 
 	handlePerCC: function(event){
@@ -208,17 +218,22 @@ var View_Statistics = Backbone.View.extend({
 
 	rawData: new Backbone.Collection(),
 
-	initialize: function(){
+	initialize: function(param){
+		
+		if(_.isUndefined(param)){
+			console.log("fuck");
+		}else{
+			this.rawData = param.rawData;
 
-		_.bindAll(this, "render");
+			this.filterModel.on("change", this.render, this);
+			this.perCC.on("change", this.render, this);
+			this.listenTo(this.rawData, "sync", this.render, this);
 
-		this.filterModel.on("change", this.render);
-		this.perCC.on("change", this.render);
-
+		}
 	},
 
 	render: function(){
-		
+
 		if(this.rawData.models.length == 0){
 			return false;
 		}
@@ -253,6 +268,8 @@ var View_Statistics = Backbone.View.extend({
 
 	_preparePlotData: function(){
 
+		var costcenter = _.uniq( this.rawData.pluck('costcenter') );
+
 		// Apply filterModel
 		if( $.isEmptyObject( this.filterModel.attributes ) ){
 			this.filteredData = this.rawData;
@@ -261,7 +278,7 @@ var View_Statistics = Backbone.View.extend({
 		}
 
 		var plotData = [
-			this._createHeader()
+			this._createHeader(costcenter)
 		];
 
 		_.each( this.filteredData.groupBy("year"), function(yearData, year){
@@ -286,7 +303,7 @@ var View_Statistics = Backbone.View.extend({
 
 				if(this.perCC.get("perCC")){
 					// Render View per Costcenter
-					_.each(statisticsApp.costcenter, function(cc){
+					_.each(costcenter, function(cc){
 						
 						var costcenterData = new Collection_RawData( monthData.where({costcenter: cc}) );
 						renderDataLine.push( costcenterData.sumPrints() );
@@ -309,11 +326,11 @@ var View_Statistics = Backbone.View.extend({
 
 	},
 
-	_createHeader: function(){
+	_createHeader: function(costcenterList){
 		var firstPlotline = [ "Month" ];
 
 		if(this.perCC.get("perCC")){
-			_.each(statisticsApp.costcenter, function(cc){
+			_.each(costcenterList, function(cc){
 				var costcenter = statisticsApp.costcenterData.findWhere({costcenter: String(cc)});
 				if(!_.isUndefined(costcenter)){
 					firstPlotline.push( costcenter.get("cc_name") );
@@ -331,62 +348,126 @@ var View_Statistics = Backbone.View.extend({
 });
 
 
-// var View_Statistics_Text = Backbone.View.extend({
+var View_Costcenter = Backbone.View.extend({
 
-// 	tagName: "div",
-// 	className: "statisticsText",
+	el: "#body",
+	rawData: new Collection_RawData(),
+	template: $("#tpl-costcenter").html(),
+	template_userRow: $("#tpl-costcenter-userRow").html(),
 
-// 	data: new Backbone.Collection(),
+	userCollection: new Collection_userData(),
 
-// 	initialize: function(){
-// 		// this.render();
-// 	},
+	initialize: function(param){
+		if(!_.isUndefined(param.rawData)){
+			this.rawData = param.rawData;
+		}
 
-// 	render: function(){
+		this.listenTo(this.rawData, "sync", this._getData, this);
+
+	},
+
+	render: function(){
+
+		if(this.userCollection.length == 0){
+			this._getData();
+			return this;
+		}
+
+		this.$el.html( _.template( this.template ) );
+		var tableData = this._prepareTableData();
+
+	},
+
+	_getData: function(){
+
+		var usernames = _.uniq( this.rawData.pluck('user') );
+
+		$.ajax({
+			url: 'getUserInfo.php',
+			type: 'POST',
+			// dataType: 'json',
+			data: {user: usernames},
+		})
+		.done(function() {
+			console.log("success");
+			debugger;
+		})
+		.fail(function() {
+			console.log("error");
+			debugger;
+		})
+		.always(function() {
+			console.log("complete");
+			debugger;
+		});
+		
 
 
+	},
 
-// 		return this;
-// 	}
+	_prepareTableData: function(){
 
-// });
+		
+
+		
+
+		debugger;
+
+	}
+
+});
 
 
 var Router = Backbone.Router.extend({
 	routes: {
+		"costcenter": "costcenter",
 		"*actions": "default"
 	},
 
-	menu: null,			// View for Filterbar/Menu
-	statistics: new View_Statistics(),	// current statisticsView
+	menu: undefined,			// View for Filterbar/Menu
+	statistics: undefined,	// current statisticsView
+	view_costcenter: undefined,
+
+	currentView: undefined,
 
 	rawData: new Collection_RawData(),
-	printer: [],
-	// costcenter: [],
-	printerData: {},	// sozpr1 => collection, sozpr2 => collection
-	costcenterData: {},		// costcenter1 => collection, costcenter2 => collection
+	costcenterData: null,
+	user: null,
 
 	default: function(id, att){
-		if(this.printer.length == 0){	// Do nothing, if not initialized
-			return this;
-		}
-		
-		if(this.menu == null){
-			this.menu = new View_Menu();
-			this.menu.printer = this.printer;
-			this.menu.costcenter = this.costcenterData;
-			this.menu.years = this.years;
-			this.menu.render();	
+		this.menu.mode = "statistics";
+
+		if(_.isUndefined( this.statistics )){
+			this.statistics = new View_Statistics({
+				rawData: this.rawData
+			});	
 		}
 
-		this.statistics.rawData = this.rawData;
-		this.statistics.render();
-		
+		if(!_.isUndefined( this.currentView ) || this.currentView == "statistics"){
+			this.statistics.render();
+		}
+
 	},
 
+	costcenter: function(){
+		// Render costcenter view in #body
+		this.menu.mode = "costcenter";
+
+		if(_.isUndefined( this.view_costcenter )){
+			this.view_costcenter = new View_Costcenter({
+				rawData: this.rawData
+			});
+		}
+
+		if(!_.isUndefined( this.currentView ) || this.currentView == "costcenter"){
+			this.view_costcenter.render();
+		}
+
+		this.currentView = "costcenter";
+
+	},
 
 	initialize: function(){
-		_.bindAll(this, "crunchRawData");
 
 		// Initilaize Collections
 		this.costcenterData = new Collection_Costcenter();
@@ -399,27 +480,15 @@ var Router = Backbone.Router.extend({
 		}
 		
 		// Build two step asynchronous Data fetch
-		this.listenTo(this.rawData, "sync", this.crunchRawData);	// second step fetch
 		this.listenTo(this.user, "sync", fetchRawData);				// init second step fetch
-		
+
 		// initialize data fetch (first step, second step (printerJobData) via event)
 		this.user.fetch();
 		this.costcenterData.fetch();
 		
-	},
-
-	crunchRawData: function(event){
-		if(_.isUndefined( this.rawData )){
-			return false;
-		}
-
-		var _this = this;
-
-		this.costcenter = _.uniq( _this.rawData.pluck('costcenter') );
-		this.printer = _.uniq( _this.rawData.pluck('printer') );
-		this.years = _.uniq( _this.rawData.pluck('year') );
-
-		this.default();
+		this.menu = new View_Menu({
+			rawData: this.rawData
+		});
 
 	},
 
