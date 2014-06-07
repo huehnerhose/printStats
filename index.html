@@ -3,8 +3,8 @@
 <head>
 	<title>PrintStats</title>
 	<link rel="stylesheet" type="text/css" href="printStat.css" />
-	<link rel="stylesheet" type="text/css" href="jquery.dataTables.css" />
-	<link rel="stylesheet" type="text/css" href="jquery.dataTables_themeroller.css" />
+<!-- 	<link rel="stylesheet" type="text/css" href="jquery.dataTables.css" />
+	<link rel="stylesheet" type="text/css" href="jquery.dataTables_themeroller.css" /> -->
 </head>
 <body>
 	<div id="main">
@@ -27,6 +27,44 @@
 			</thead>
 			<tbody></tbody>
 		</table>
+	</script>
+
+	<script type="text/template" id="tpl-costcenterRow">
+		<tr <% if(_.isNull(costcenter)){%> class="noCostcenter" <%} %>>
+			<td><%= username %></td>
+			<td><%= displayname %></td>
+			<td><%= costcenterSelect({ 
+				costcenterData: statisticsApp.costcenterData, 
+				activeCC: costcenter,
+				username: username
+			}) %></td>
+			<!--<td>
+				<%= groupSelect({
+					groups: groups
+					})
+					%>
+			</td>-->
+		</tr>
+	</script>
+
+	<script type="text/template" id="tpl-groupSelect">
+		<select name="groups" size="1">
+			<% _.each(groups, function(group){ %> 
+
+				<option><%= group %></option>
+		
+			<% }) %>
+		</select>
+	</script>
+
+	<script type="text/template" id="tpl-costcenterSelect">
+		<select name="costcenter" id="<%= username %>" size="1">
+			<% costcenterData.each(function(cc){%>
+
+			<option value="<%= cc.get("costcenter") %>" <% if(cc.get("costcenter") == activeCC){%> selected <% }%> ><%= cc.get("cc_name") %></option>
+
+			<%}) %>
+		</select>
 	</script>
 
 	<script type="text/template" id="tpl-filterbar">
@@ -93,7 +131,7 @@
 	</script>
 	<script type="application/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 	<script type="application/javascript" src="underscore-min.js"></script>
-	<script type="application/javascript" src="jquery.dataTables.min.js"></script>
+	<!-- <script type="application/javascript" src="jquery.dataTables.min.js"></script> -->
 	<script type="application/javascript" src="backbone.js"></script>
 	<script type="application/javascript" src="printStat.js"></script>
 </body>

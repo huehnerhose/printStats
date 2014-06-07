@@ -7,7 +7,6 @@ function prependZero($int){
 	return $int;
 }
 
-
 if($_REQUEST["format"] == "accsnmp"){
 
 	accsnmpLog2db( file_get_contents("/tmp/page_acc_log.1") );
@@ -16,6 +15,8 @@ if($_REQUEST["format"] == "accsnmp"){
 
 	cupsLog2db( file_get_contents("/tmp/page_log.1") );
 
+}else if($_REQUEST["format"] == "test"){
+	var_dump( getCostcenterByUser( "huehnerhose" ) );
 }else{
 
 	die("no given format");
@@ -63,23 +64,30 @@ function cupsLog2db($log){
 		
 	}
 
+	$printJob["costcenter"] = getCostcenterByUser($printJob["user"]);
+
 	$logByJobs = groupBy($entries, "job");
 	$jobLog = standardizeJobs($logByJobs);
 	$db = new DB;
 
 	foreach( $jobLog as $printJob ){
-		// echo $printJob["user"] . " " . $printJob["pages"] . "\n";
-		// function insert($jobid = null, $printer = null, $date = null, $user = null, $pages = null){
-
 		$db->insert( 
 			$printJob["job"], 
 			$printJob["printer"], 
 			$printJob["date"]->format($db->dateFormat) ,
 			$printJob["user"],
-			$printJob["pages"]
+			$printJob["pages"],
+			$printJob["costcenter"]
 		);
 
 	}
+}
+
+
+function getCostcenterByUser($user){
+	$db = new DB;
+	$costcenter = $db->getUser2CCbyUser($user);
+	return $costcenter;
 }
 
 

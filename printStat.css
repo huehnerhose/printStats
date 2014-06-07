@@ -3,7 +3,7 @@ body{
 }
 
 #main{
-	width: 800px;
+	width: 1000px;
 	margin: 0 auto;
 }
 
@@ -22,4 +22,20 @@ a.printer, a.year, a.month{
 
 .userTable{
 	margin-top: 30px;
+}
+
+table{
+	border: 1px solid black;
+}
+
+tr.noCostcenter{
+	background-color: red;
+}
+
+table td{
+	border-top: 1px solid black;
+}
+
+#chart{
+	height: 500px;
 }

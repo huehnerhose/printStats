@@ -21,7 +21,7 @@ var Model_RawData = Backbone.Model.extend({
 		attributes.jobid = parseInt(attributes.jobid, 10);
 		attributes.pages = parseInt(attributes.pages, 10);
 
-		attributes.costcenter = statisticsApp.user.getCCbyUser(attributes.user);
+		attributes.costcenter = (_.isNull(attributes.costcenter) ? 0 : parseInt(attributes.costcenter));
 
 		Backbone.Model.prototype.set.call(this, attributes, properties);
 	}
@@ -91,7 +91,9 @@ var Collection_PrinterData = Collection_RawData.extend({
 
 
 
-var Model_userData = Backbone.Model.extend({});
+var Model_userData = Backbone.Model.extend({
+	url: "addCostcenter2Log.php"
+});
 
 var Collection_userData = Backbone.Collection.extend({
 	model: Model_userData,
@@ -259,11 +261,41 @@ var View_Statistics = Backbone.View.extend({
 
 		var chart = new google.visualization.ComboChart(this.$el.find("#chart")[0]);
 
+		var switchedData = this._switchXY( plotData );
+
+		var switchedOptions = {
+			title : 'Monthly Prints By Costcenter',
+			vAxis: {title: "Prints"},
+			hAxis: {
+				title: "Month",
+			},
+			seriesType: "bars",
+			// series: {5: {type: "line"}}
+		};
+
+		switchedData = google.visualization.arrayToDataTable( switchedData );
+
 		var table = new google.visualization.Table(this.$el.find("#table")[0]);
 
 		chart.draw(data, options);
-		table.draw(data);
+		table.draw(switchedData);
 
+	},
+
+	_switchXY: function(input){
+		var output = [];
+
+		_.each(input[0], function(oldFirstElements, index){
+			if(_.isUndefined( output[index] )){
+				output[index] = [];
+			}
+
+			_.each( input, function(old){
+				output[index].push( old[index] );
+			} );
+		});
+
+		return output;
 	},
 
 	_preparePlotData: function(){
@@ -357,6 +389,10 @@ var View_Costcenter = Backbone.View.extend({
 
 	userCollection: new Collection_userData(),
 
+	events: {
+		"change :input[name=costcenter]": "handleChange"
+	},
+
 	initialize: function(param){
 		if(!_.isUndefined(param.rawData)){
 			this.rawData = param.rawData;
@@ -374,7 +410,39 @@ var View_Costcenter = Backbone.View.extend({
 		}
 
 		this.$el.html( _.template( this.template ) );
-		var tableData = this._prepareTableData();
+
+		var tbody = this.$el.find("tbody");
+
+		var costcenterSelect = _.template($("#tpl-costcenterSelect").html());
+		var groupSelect = _.template($("#tpl-groupSelect").html());
+
+		this.userCollection.each(function(user){
+			tbody.append( 
+				_.template( 
+					$("#tpl-costcenterRow").html(), 
+					{
+						username: user.get("user"),
+						displayname: user.get("displayname"),
+						costcenter: user.get("costcenter"),
+						costcenterSelect: costcenterSelect,
+						groupSelect: groupSelect,
+						groups: user.get("groups")
+					}
+				) 
+			)
+		});
+
+	},
+
+	handleChange: function(event){
+
+		// debugger;
+		var userModel = this.userCollection.findWhere({user: $(event.target).prop("id")});
+		userModel.set("costcenter", $(event.target).val());
+
+		$(event.target).parents("tr").removeClass("noCostcenter");
+
+		userModel.save();
 
 	},
 
@@ -382,36 +450,20 @@ var View_Costcenter = Backbone.View.extend({
 
 		var usernames = _.uniq( this.rawData.pluck('user') );
 
+		var _this = this;
+
 		$.ajax({
 			url: 'getUserInfo.php',
 			type: 'POST',
-			// dataType: 'json',
+			dataType: 'json',
 			data: {user: usernames},
 		})
-		.done(function() {
-			console.log("success");
-			debugger;
-		})
-		.fail(function() {
-			console.log("error");
-			debugger;
-		})
-		.always(function() {
-			console.log("complete");
-			debugger;
+		.done(function(data) {
+			_this.userCollection.reset( data.users );
+			_this.render();
 		});
 		
 
-
-	},
-
-	_prepareTableData: function(){
-
-		
-
-		
-
-		debugger;
 
 	}
 
@@ -459,9 +511,9 @@ var Router = Backbone.Router.extend({
 			});
 		}
 
-		if(!_.isUndefined( this.currentView ) || this.currentView == "costcenter"){
+		// if(!_.isUndefined( this.currentView ) || this.currentView == "costcenter"){
 			this.view_costcenter.render();
-		}
+		// }
 
 		this.currentView = "costcenter";
 
