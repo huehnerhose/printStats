@@ -12,7 +12,7 @@ Class DB{
 		$this->user2cc = $this->db->prepare("SELECT * FROM user2cc");
 		$this->user2ccByUser = $this->db->prepare(" SELECT costcenter FROM user2cc WHERE username = :user ");
 		$this->costcenter = $this->db->prepare("SELECT * FROM costcenter");
-		$this->getUserPrintJobsWithoutCCString = $this->db->prepare("SELECT uid FROM data WHERE costcenter IS NULL AND user = :user");
+		$this->getUserPrintJobsWithoutCCString = $this->db->prepare("SELECT uid FROM data WHERE (costcenter IS NULL OR costcenter = 0 ) AND user = :user");
 	}
 
 	function getUserPrintJobsWithoutCC($user = null){
@@ -65,7 +65,7 @@ Class DB{
 
 	}
 
-	function insert($jobid = null, $printer = null, $date = null, $user = null, $pages = null){
+	function insert($jobid = null, $printer = null, $date = null, $user = null, $pages = null, $costcenter = null){
 		if(is_null($jobid) || is_null($printer) || is_null($date) || is_null($user) || is_null($pages))
 			echo "Wrong Parameters";
 		
@@ -81,7 +81,8 @@ Class DB{
 				':printer' => $printer,
 				':date' => $date,
 				':user' => $user,
-				':pages' => $pages
+				':pages' => $pages,
+				':costcenter' => $costcenter
 			));	
 		}else{
 			print_r($rows);

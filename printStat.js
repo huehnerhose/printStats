@@ -1,10 +1,10 @@
 
 /**
- * Model for each printJob. 
+ * Model for each printJob.
  * Customset function takes care of handling a proper date object as date.
  */
 var Model_RawData = Backbone.Model.extend({
-	
+
 	set: function(attributes, properties){
 
 		if(!_.isUndefined( attributes.date ) && typeof( attributes.date ) != "object" ){
@@ -38,7 +38,7 @@ var Collection_RawData = Backbone.Collection.extend({
 	initialize: function(){
 		_.bindAll(this, "getPrintCount");
 	},
-	
+
 	/**
 	 * Filterfunction to retrieve exactly the print based on year, month, day, printer
 	 * Unset filter needles will be ignored
@@ -107,7 +107,7 @@ var Collection_userData = Backbone.Collection.extend({
 		var usermodel = this.findWhere({
 			"username": user
 		});
-		
+
 		if( _.isUndefined(usermodel) ){
 			return 0;
 		}
@@ -151,9 +151,9 @@ var View_Menu = Backbone.View.extend({
 			console.log("Fuck");
 		}else{
 			this.rawData = param.rawData;
-			this.rawData.on("sync", this.render, this);	
+			this.rawData.on("sync", this.render, this);
 		}
-		
+
 	},
 
 	render: function(){
@@ -166,16 +166,16 @@ var View_Menu = Backbone.View.extend({
 
 		this.$el.html("");
 
-		this.$el.append( 
-			_.template( 
-				this.templatePrinter, 
+		this.$el.append(
+			_.template(
+				this.templatePrinter,
 				{
 					printers: this.printer,
 					costcenter: this.costcenter,
 					years: this.years.sort().reverse()
 				},
-				this 
-			), this 
+				this
+			), this
 		);
 
 		this.$el.find("select[name=year]").trigger("change");
@@ -196,7 +196,7 @@ var View_Menu = Backbone.View.extend({
 			}
 		}
 		// render Statistics with additional attribute / value combination
-		
+
 
 	},
 
@@ -221,7 +221,7 @@ var View_Statistics = Backbone.View.extend({
 	rawData: new Backbone.Collection(),
 
 	initialize: function(param){
-		
+
 		if(_.isUndefined(param)){
 			console.log("fuck");
 		}else{
@@ -261,7 +261,7 @@ var View_Statistics = Backbone.View.extend({
 
 		var chart = new google.visualization.ComboChart(this.$el.find("#chart")[0]);
 
-		var switchedData = this._switchXY( plotData );
+		var switchedData = this._switchXY( this._preparePlotData(true) );
 
 		var switchedOptions = {
 			title : 'Monthly Prints By Costcenter',
@@ -298,7 +298,7 @@ var View_Statistics = Backbone.View.extend({
 		return output;
 	},
 
-	_preparePlotData: function(){
+	_preparePlotData: function(renderOverYear){
 
 		var costcenter = _.uniq( this.rawData.pluck('costcenter') );
 
@@ -306,7 +306,7 @@ var View_Statistics = Backbone.View.extend({
 		if( $.isEmptyObject( this.filterModel.attributes ) ){
 			this.filteredData = this.rawData;
 		}else{
-			this.filteredData =  new Collection_RawData( this.rawData.where( this.filterModel.attributes ) ); 	
+			this.filteredData =  new Collection_RawData( this.rawData.where( this.filterModel.attributes ) );
 		}
 
 		var plotData = [
@@ -315,6 +315,8 @@ var View_Statistics = Backbone.View.extend({
 
 		_.each( this.filteredData.groupBy("year"), function(yearData, year){
 			var yearCollection = new Collection_RawData(yearData);
+
+			var overYear = [year + "total"];
 
 			_.each( yearCollection.groupBy("month"), function(monthData, month){
 
@@ -325,9 +327,9 @@ var View_Statistics = Backbone.View.extend({
 					alert("Update your Browser");
 				}else{
 					var i = Intl.DateTimeFormat("en", {month: "short"});
-					month = i.format( (new Date()).setMonth( month ) );	
+					month = i.format( (new Date()).setMonth( month ) );
 				}
-				
+
 
 				var renderDataLine = [
 					month + " " + year
@@ -335,22 +337,25 @@ var View_Statistics = Backbone.View.extend({
 
 				if(this.perCC.get("perCC")){
 					// Render View per Costcenter
-					_.each(costcenter, function(cc){
-						
+					_.each(costcenter, function(cc, index){
+
 						var costcenterData = new Collection_RawData( monthData.where({costcenter: cc}) );
 						renderDataLine.push( costcenterData.sumPrints() );
+
+						overYear[index+1] = ((isNaN(overYear[index+1])) ? 0 : overYear[index+1] ) + costcenterData.sumPrints();
 
 					}, this);
 				}else{
 					// render only with total prints
 					renderDataLine.push( monthData.sumPrints() );
+					overYear[1] = ((isNaN(overYear[1])) ? 0 : overYear[1] ) + monthData.sumPrints();
 				}
-				
-				plotData.push(renderDataLine);
-				
-			}, this );
 
-			
+				plotData.push(renderDataLine);
+
+			}, this );
+				if(renderOverYear)
+					plotData.push(overYear);
 
 		}, this );
 
@@ -369,8 +374,8 @@ var View_Statistics = Backbone.View.extend({
 				}else{
 					firstPlotline.push(cc);
 				}
-					
-			});	
+
+			});
 		}else{
 			firstPlotline.push("Insgesamt");
 		}
@@ -417,18 +422,20 @@ var View_Costcenter = Backbone.View.extend({
 		var groupSelect = _.template($("#tpl-groupSelect").html());
 
 		this.userCollection.each(function(user){
-			tbody.append( 
-				_.template( 
-					$("#tpl-costcenterRow").html(), 
+							// debugger;
+			tbody.append(
+				_.template(
+					$("#tpl-costcenterRow").html(),
 					{
 						username: user.get("user"),
 						displayname: user.get("displayname"),
 						costcenter: user.get("costcenter"),
 						costcenterSelect: costcenterSelect,
 						groupSelect: groupSelect,
-						groups: user.get("groups")
+						groups: user.get("groups"),
+						prints: (_.isNull(user.get("costcenter")) ? new Collection_RawData(statisticsApp.rawData.where({user: user.get("user")})).sumPrints() : "" )
 					}
-				) 
+				)
 			)
 		});
 
@@ -462,7 +469,7 @@ var View_Costcenter = Backbone.View.extend({
 			_this.userCollection.reset( data.users );
 			_this.render();
 		});
-		
+
 
 
 	}
@@ -492,7 +499,7 @@ var Router = Backbone.Router.extend({
 		if(_.isUndefined( this.statistics )){
 			this.statistics = new View_Statistics({
 				rawData: this.rawData
-			});	
+			});
 		}
 
 		if(!_.isUndefined( this.currentView ) || this.currentView == "statistics"){
@@ -530,14 +537,14 @@ var Router = Backbone.Router.extend({
 		var fetchRawData = function(){
 			this.rawData.fetch();
 		}
-		
+
 		// Build two step asynchronous Data fetch
 		this.listenTo(this.user, "sync", fetchRawData);				// init second step fetch
 
 		// initialize data fetch (first step, second step (printerJobData) via event)
 		this.user.fetch();
 		this.costcenterData.fetch();
-		
+
 		this.menu = new View_Menu({
 			rawData: this.rawData
 		});

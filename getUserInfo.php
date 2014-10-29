@@ -10,7 +10,7 @@
 		die("Wrong Data");
 	}
 
-	if($_REQUEST["test"])
+	if(isset($_REQUEST["test"]))
 		$users = array($users);
 
 
@@ -20,7 +20,7 @@
 		$ldapbind = ldap_bind($ldap, $ldapuser, $ldappw) or die ("Error trying to bind: ".ldap_error($ldapconn));
 	}
 
-	
+
 
 	$output = array();
 
@@ -28,7 +28,7 @@
 	$db = new DB;
 
 	foreach($users as $user){
-		
+
 		$result = getRawUserData($user, $ldap);
 
 		$output[] = array(
@@ -46,28 +46,38 @@
 	}
 
 	function getGroups($result){
-        
+
         $output = array();
 
-        foreach( $result[0]["memberof"] as $key => $group){
-        	if(is_int($key))
-        		$output[] = $group;
+        if(isset($result[0])){
+        	if(isset($result[0]["memberof"])){
+        		foreach( $result[0]["memberof"] as $key => $group){
+        			if(is_int($key))
+        				$output[] = $group;
+        		}
+        	}
+
         }
 
-        return $output;    	
-	}	
+
+
+        return $output;
+	}
 
 	function getDisplayName($result){
-	
+
 	    // $search = ldap_search($ldap, "CN=".$user.",OU=".strtoupper(substr($user, 0, 1)).",OU=User,dc=win,dc=tu-berlin,dc=de", "(objectclass=*)");
      //    $result = ldap_get_entries($ldap, $search);
-        
+
         $displayname = ($result[0]["displayname"][0]);
 
-        return $displayname;    	
+        return $displayname;
 	}
-	
-	$json = json_encode(array( "users" => $output ));
-	echo $json;
+echo "here";
+	echo serialize(array( "users" => $output ));
+
+// 	$json = json_encode(array( "users" => $output ));
+// var_dump($output);
+	// echo $json;
 
 ?>

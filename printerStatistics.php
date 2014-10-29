@@ -6,7 +6,7 @@ require("db.php");
 $db = new DB;
 $rows = $db->getAll();
 
-if($_REQUEST["subset"]){
+if(isset($_REQUEST["subset"])){
 	$rows = array_slice($rows, 15, 10);
 }
 

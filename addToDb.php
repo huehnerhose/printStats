@@ -64,13 +64,16 @@ function cupsLog2db($log){
 		
 	}
 
-	$printJob["costcenter"] = getCostcenterByUser($printJob["user"]);
+	
 
 	$logByJobs = groupBy($entries, "job");
 	$jobLog = standardizeJobs($logByJobs);
 	$db = new DB;
 
 	foreach( $jobLog as $printJob ){
+		
+		$printJob["costcenter"] = getCostcenterByUser($printJob["user"]);
+
 		$db->insert( 
 			$printJob["job"], 
 			$printJob["printer"], 
