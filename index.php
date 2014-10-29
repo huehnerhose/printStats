@@ -82,25 +82,31 @@
 
 	<script type="text/template" id="tpl-filterbar">
 		<div class="main">
+			<h3>Optionen</h3>
 			<a href="?logout=true">LogOut</a>
 			<a href="#">Druckstatistiken</a>
 			<a href="#costcenter">Kostenstellenverwaltung</a>
 		</div>
 
 		<div class="filterBar">
-			<select size="1" name="printer">
+			<h3>Filter</h3>
+			<div class="filterElement">
+				<label for="printer">Drucker</label>
+				<select size="1" name="printer">
 
-					<option>Alle</option>
+						<option>Alle</option>
 
-				<% _.each(printers, function(printer){ %>
+					<% _.each(printers, function(printer){ %>
 
-					<option><%= printer %></option>
+						<option><%= printer %></option>
 
-				<% }); %>
+					<% }); %>
 
-			</select>
+				</select>
+			</div>
 
-			<select size="1" name="costcenter">
+
+<!-- 			<select size="1" name="costcenter">
 
 				<option>Alle</option>
 
@@ -111,29 +117,47 @@
 				<% }); %>
 
 
-			</select>
+			</select> -->
 
-			<select name="year" size="1">
+			<div class="filterElement">
+				<label for="year">Jahr</label>
+				<select name="year" size="1">
 
-				<% _.each(years, function(year){ %>
+					<% _.each(years, function(year){ %>
 
-					<option><%= year %></option>
+						<option><%= year %></option>
 
-				<% }); %>
+					<% }); %>
 
-			</select>
+				</select>
+			</div>
 
-			<select name="month" size="1">
-				<option>Alle</option>
 
-				<% _.each([1,2,3,4,5,6,7,8,9,10,11,12], function(i){ %>
+			<div class="filterElement">
+				<label for="month">Monat</label>
+				<select name="month" size="1">
+					<option>Alle</option>
 
-					<option><%= i %></option>
+					<% _.each([1,2,3,4,5,6,7,8,9,10,11,12], function(i){ %>
 
-				<% }) %>
-			</select>
+						<option><%= i %></option>
 
-			<input type="checkbox" name="perCC" checked="checked" /> Pro Kostenstelle
+					<% }) %>
+				</select>
+			</div>
+
+			<div class="filterElement">
+				<label for="filterMode">Gesamt</label>
+				<input type="radio" name="filterMode" value="global">
+			</div>
+
+			<div class="filterElement">
+				<label for="filterMode">pro Kostenstelle</label>
+				<input type="radio" name="filterMode" value="perUnit" checked="checked">
+			</div>
+
+
+			<!-- <input type="checkbox" name="perCC" checked="checked" /> Pro Kostenstelle -->
 		</div>
 
 

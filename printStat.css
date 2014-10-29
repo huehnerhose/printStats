@@ -2,13 +2,32 @@ body{
 	font-family: "Source Code Pro", "Meta", "Helvetica", "Tahoma", "Arial";
 }
 
+label{
+	display: inline-block;
+	width: 160px;
+}
+
+.filterBar{
+	width: 350px;
+	display: inline-block;
+}
+
+.main{
+	display: inline-block;
+	width: 500px;
+}
+
+#head .main a{
+	display: block;
+}
+
 #main{
 	width: 1000px;
 	margin: 0 auto;
 }
 
 #head{
-	width: 600px;
+	width: 100%;
 	margin-bottom: 50px;
 }
 

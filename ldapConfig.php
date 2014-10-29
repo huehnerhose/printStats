@@ -1,5 +1,8 @@
 <?php
 	session_start();
+	if(!isset($_SESSION["user"])){
+		die("Please Login!");
+	}
 	$ldaptree = "OU=User, DC=win, DC=tu-berlin, DC=de";
 	$ldapserver = "win.tu-berlin.de";
 	$ldapport = "389";

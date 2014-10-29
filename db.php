@@ -68,7 +68,7 @@ Class DB{
 	function insert($jobid = null, $printer = null, $date = null, $user = null, $pages = null, $costcenter = null){
 		if(is_null($jobid) || is_null($printer) || is_null($date) || is_null($user) || is_null($pages))
 			echo "Wrong Parameters";
-		
+
 		$this->checkStmt->execute(array(
 			':jobid' => $jobid,
 			':printer' => $printer
@@ -77,13 +77,13 @@ Class DB{
 		$rows = $this->checkStmt->fetchAll(PDO::FETCH_ASSOC);
 		if(count($rows) == 0){
 			$this->insertStmt->execute(array(
-				':jobid' => $jobid, 
+				':jobid' => $jobid,
 				':printer' => $printer,
 				':date' => $date,
 				':user' => $user,
 				':pages' => $pages,
 				':costcenter' => $costcenter
-			));	
+			));
 		}else{
 			print_r($rows);
 		}
@@ -97,7 +97,7 @@ Class DB{
 
 	function getUser2CCbyUser($user = null){
 		if(is_null($user)){
-			return null; 
+			return null;
 		}
 
 		$this->user2ccByUser->execute(array(
@@ -113,7 +113,7 @@ Class DB{
 	}
 
 	function insertUser2CC($user, $costcenter){
-		
+
 		$costcenterDB = $this->getUser2CCbyUser($user);
 
 		$data = array(
@@ -135,7 +135,7 @@ Class DB{
 	}
 
 	function updatePrintLog($uidList, $costcenter){
-		
+
 		$data = array(
 			":costcenter" => $costcenter,
 			// ":uidList" => $uidList

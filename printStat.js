@@ -142,7 +142,7 @@ var View_Menu = Backbone.View.extend({
 
 		"click a" 						: "handleClick",
 		"change select"					: "handleSelect",
-		"click input[name=perCC]"		: "handlePerCC"
+		"click input[name=filterMode ]"	: "handlePerCC"
 
 	},
 
@@ -207,7 +207,9 @@ var View_Menu = Backbone.View.extend({
 	},
 
 	handlePerCC: function(event){
-		statisticsApp.statistics.perCC.set("perCC", $(event.target).prop("checked"));
+		statisticsApp.statistics.perCC.set({
+			perCC: $(event.target).val() === "perUnit" ? true : false
+		});
 	}
 
 })
