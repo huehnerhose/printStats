@@ -6,14 +6,14 @@
 		unset($_SESSION["password"]);
 	}
 
+	require("userInfoFunctions.php");
+
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 	<title>PrintStats</title>
 	<link rel="stylesheet" type="text/css" href="printStat.css" />
-<!-- 	<link rel="stylesheet" type="text/css" href="jquery.dataTables.css" />
-	<link rel="stylesheet" type="text/css" href="jquery.dataTables_themeroller.css" /> -->
 </head>
 <body>
 	<div id="main">
@@ -209,8 +209,14 @@ function checkLdapLogin($user, $password){
 
 }
 
-if(isset($_SESSION["permitted"]) && $_SESSION["permitted"] ){
 
+
+/**
+ * CASE LOGGED IN
+ */
+
+
+if(isset($_SESSION["permitted"]) && $_SESSION["permitted"] ){
 ?>
 
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>

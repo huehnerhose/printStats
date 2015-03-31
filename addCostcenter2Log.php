@@ -1,4 +1,4 @@
-<?php 
+<?php
 	require("db.php");
 
 	$json = file_get_contents("php://input");
