@@ -1,6 +1,6 @@
 <?php
 	session_start();
-	if($_REQUEST["logout"]){
+	if( isset($_REQUEST["logout"]) && $_REQUEST["logout"]){
 		unset($_SESSION["user"]);
 		unset($_SESSION["permitted"]);
 		unset($_SESSION["password"]);
@@ -106,7 +106,7 @@
 			</div>
 
 
-<!-- 			<select size="1" name="costcenter">
+			<!-- 			<select size="1" name="costcenter">
 
 				<option>Alle</option>
 
@@ -180,30 +180,7 @@
 
 
 
-function getRawUserData($user, $ldap){
-	$search = ldap_search($ldap, "CN=".$user.",OU=".strtoupper(substr($user, 0, 1)).",OU=User,dc=win,dc=tu-berlin,dc=de", "(objectclass=*)");
-	$result = ldap_get_entries($ldap, $search);
-	return $result;
-}
 
-function getGroups($result){
-
-    $output = array();
-
-    if(isset($result[0])){
-    	if(isset($result[0]["memberof"])){
-    		foreach( $result[0]["memberof"] as $key => $group){
-    			if(is_int($key))
-    				$output[] = $group;
-    		}
-    	}
-
-    }
-
-
-
-    return $output;
-}
 
 function checkLdapLogin($user, $password){
 
@@ -232,7 +209,7 @@ function checkLdapLogin($user, $password){
 
 }
 
-if($_SESSION["permitted"]){
+if(isset($_SESSION["permitted"]) && $_SESSION["permitted"] ){
 
 ?>
 
@@ -240,7 +217,7 @@ if($_SESSION["permitted"]){
 	<script type="text/javascript">
 		google.load('visualization', '1', {packages: ['corechart', 'table']});
 	</script>
-	<script type="application/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script type="application/javascript" src="//code.jquery.com/jquery-2.0.3.min.js"></script>
 	<script type="application/javascript" src="underscore-min.js"></script>
 	<!-- <script type="application/javascript" src="jquery.dataTables.min.js"></script> -->
 	<script type="application/javascript" src="backbone.js"></script>
